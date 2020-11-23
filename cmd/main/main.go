@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/eitah/go-url-shortener"
+	"github.com/eitah/go-url-shortener/urlshort"
 )
 
 func main() {
