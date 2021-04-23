@@ -3,7 +3,6 @@ package urlshort
 import (
 	"fmt"
 	"net/http"
-	"strings"
 )
 
 // MapHandler will return an http.HandlerFunc which also implements http.Handler that will attempt
@@ -12,27 +11,22 @@ import (
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) (handlerFunc http.HandlerFunc) {
 	// todo implement this
 	return func(writer http.ResponseWriter, req *http.Request) {
-		mux := http.NewServeMux()
-		callMux := false
-
+		fmt.Printf("redirect to %s...\n", req.URL.Path)
 		for key, redirectUrl := range pathsToUrls {
-			if strings.Contains(req.URL.Path, key) {
+			if req.URL.Path == key {
 				// implementation 1: try just redirect which works but is not what fallback does
 				// http.Redirect(writer, req, redirectUrl, 301)
 
-				// implementation 2:
-				callMux = true
-				fmt.Printf("redirect to %s bc  matched %s", redirectUrl, key)
+				mux := http.NewServeMux()
+				fmt.Printf("redirect to %s bc matched %s!\n", redirectUrl, key)
 				mux.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
 					fmt.Fprintln(writer, redirectUrl)
 				})
+				mux.ServeHTTP(writer, req)
+				return
 			}
 		}
-		if callMux {
-			mux.ServeHTTP(writer, req)
-		} else {
-			fallback.ServeHTTP(writer, req)
-		}
+		fallback.ServeHTTP(writer, req)
 	}
 }
 
