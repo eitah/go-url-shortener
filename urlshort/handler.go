@@ -1,7 +1,6 @@
 package urlshort
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -11,20 +10,10 @@ import (
 func MapHandler(pathsToUrls map[string]string, fallback http.Handler) (handlerFunc http.HandlerFunc) {
 	// todo implement this
 	return func(writer http.ResponseWriter, req *http.Request) {
-		fmt.Printf("redirect to %s...\n", req.URL.Path)
-		for key, redirectUrl := range pathsToUrls {
-			if req.URL.Path == key {
-				// implementation 1: try just redirect which works but is not what fallback does
-				// http.Redirect(writer, req, redirectUrl, 301)
-
-				mux := http.NewServeMux()
-				fmt.Printf("redirect to %s bc matched %s!\n", redirectUrl, key)
-				mux.HandleFunc(key, func(w http.ResponseWriter, r *http.Request) {
-					fmt.Fprintln(writer, redirectUrl)
-				})
-				mux.ServeHTTP(writer, req)
-				return
-			}
+		path := req.URL.Path
+		if redirectUrl, ok := pathsToUrls[path]; ok {
+			http.Redirect(writer, req, redirectUrl, http.StatusFound)
+			return
 		}
 		fallback.ServeHTTP(writer, req)
 	}
