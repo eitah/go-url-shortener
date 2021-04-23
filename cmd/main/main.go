@@ -1,11 +1,20 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/eitah/go-url-shortener/urlshort"
 )
+
+var yamlFilePathFlag string
+
+func init() {
+	flag.StringVar(&yamlFilePathFlag, "y", "", "Path to a custom map to direct your path to urls.")
+	flag.Parse()
+}
 
 func main() {
 	mux := defaultMux()
@@ -18,17 +27,26 @@ func main() {
 	}
 	mapHandler := urlshort.MapHandler(pathsToUrls, mux)
 
-	// build the yaml handler using the mapHandler as a fallback
-	yaml := `
+	// indenting this file messes up the yml. The override is useful.
+	yaml := []byte(`
 - path: /urlshort-final
   url: https://github.com/gophercises/urlshort/tree/solution
 - path: /urlshort
   url: https://github.com/gophercises/urlshort
 - path: /fish
   url: https://www.google.com
-`
+`)
 
-	yamlHandler, err := urlshort.YAMLHandler([]byte(yaml), mapHandler)
+	if yamlFilePathFlag != "" {
+		var err error
+		// override yml default
+		yaml, err = ioutil.ReadFile(yamlFilePathFlag)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	yamlHandler, err := urlshort.YAMLHandler(yaml, mapHandler)
 	if err != nil {
 		panic(err)
 	}
